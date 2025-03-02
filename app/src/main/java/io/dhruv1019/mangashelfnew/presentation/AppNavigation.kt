@@ -1,6 +1,5 @@
 package io.dhruv1019.mangashelfnew.presentation
 
-import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -11,10 +10,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import io.dhruv1019.mangashelfnew.MainActivity
-import io.dhruv1019.mangashelfnew.Manga
-import io.dhruv1019.mangashelfnew.Result
-import io.dhruv1019.mangashelfnew.Routes
+import io.dhruv1019.mangashelfnew.modal.Manga
+import io.dhruv1019.mangashelfnew.utils.Result
+import io.dhruv1019.mangashelfnew.modal.Routes
+import io.dhruv1019.mangashelfnew.modal.SortBy
+import io.dhruv1019.mangashelfnew.presentation.viewmodel.MangaViewModel
 
 @Composable
 fun AppNavigation(mangaViewModel: MangaViewModel) {
@@ -22,6 +22,7 @@ fun AppNavigation(mangaViewModel: MangaViewModel) {
     val activity = LocalContext.current
     val mangaList = mangaViewModel.mangaList.collectAsStateWithLifecycle(initialValue = Result.loading())
     val yearList = mangaViewModel.yearIndexMap.collectAsStateWithLifecycle(initialValue = mutableMapOf())
+    val sortType = mangaViewModel.sortBy.collectAsStateWithLifecycle(initialValue = SortBy.NONE)
 
     NavHost(
         navController = navController,
@@ -34,7 +35,8 @@ fun AppNavigation(mangaViewModel: MangaViewModel) {
                 onNavigateToMangaDetail = {mangaId ->
                     navController.navigate(route = Routes.DetailScreen.name.plus("/$mangaId"))
                 },
-                yearList = yearList
+                yearList = yearList,
+                sortType = sortType
             )
         }
         composable(

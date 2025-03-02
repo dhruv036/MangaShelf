@@ -1,6 +1,7 @@
-package io.dhruv1019.mangashelfnew
+package io.dhruv1019.mangashelfnew.data.local
 
 import androidx.lifecycle.LiveData
+import io.dhruv1019.mangashelfnew.modal.Manga
 import javax.inject.Inject
 
 class LocalDataSource  @Inject constructor(localDatabase: LocalDatabase) : ILocalDataSource {
@@ -17,6 +18,10 @@ class LocalDataSource  @Inject constructor(localDatabase: LocalDatabase) : ILoca
         databaseDao.putMangaToFavourite(mangaId, status)
     }
 
+    override suspend fun putMangaLastVisited(mangaId: String, LastVisited: Long) {
+        databaseDao.putMangaLastVisited(mangaId, LastVisited)
+    }
+
 
 }
 
@@ -26,4 +31,5 @@ interface ILocalDataSource {
     fun getAllMangaList() : LiveData<List<Manga>>
     fun getFavMangaList() : LiveData<List<Manga>>
     suspend fun putMangaFavourite(mangaId : String, status : Boolean)
+    suspend fun putMangaLastVisited(mangaId : String, LastVisited : Long)
 }

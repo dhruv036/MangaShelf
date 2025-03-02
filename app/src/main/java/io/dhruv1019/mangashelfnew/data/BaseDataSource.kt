@@ -1,5 +1,6 @@
-package io.dhruv1019.mangashelfnew
+package io.dhruv1019.mangashelfnew.data
 
+import io.dhruv1019.mangashelfnew.utils.Result
 import retrofit2.Response
 
 abstract class BaseDataSource {

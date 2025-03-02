@@ -1,9 +1,8 @@
-package io.dhruv1019.mangashelfnew
+package io.dhruv1019.mangashelfnew.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import io.dhruv1019.mangashelfnew.data.MangaRepository
-import io.dhruv1019.mangashelfnew.presentation.MangaViewModel
 
 class MangaViewModelFactory (private val repository: MangaRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {

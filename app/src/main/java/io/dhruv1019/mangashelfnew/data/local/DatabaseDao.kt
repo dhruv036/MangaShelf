@@ -1,11 +1,11 @@
-package io.dhruv1019.mangashelfnew
+package io.dhruv1019.mangashelfnew.data.local
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
+import io.dhruv1019.mangashelfnew.modal.Manga
 
 @Dao
 interface DatabaseDao {
@@ -21,5 +21,8 @@ interface DatabaseDao {
 
     @Query("UPDATE Manga SET isFavourite = :status WHERE id = :mangaId")
     suspend fun putMangaToFavourite(mangaId : String, status : Boolean)
+
+    @Query("UPDATE Manga SET lastVisited = :lastVisited WHERE id = :mangaId")
+    suspend fun putMangaLastVisited(mangaId : String, lastVisited : Long)
 
 }

@@ -1,9 +1,10 @@
-package io.dhruv1019.mangashelfnew
+package io.dhruv1019.mangashelfnew.data
 
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.map
+import io.dhruv1019.mangashelfnew.utils.Result
 import kotlinx.coroutines.Dispatchers
 
 fun <T, A> resultLiveData(databaseQuery: () -> LiveData<T>,

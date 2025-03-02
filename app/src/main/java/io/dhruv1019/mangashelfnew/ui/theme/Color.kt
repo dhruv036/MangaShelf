@@ -12,3 +12,4 @@ val Pink40 = Color(0xFF7D5260)
 
 val backgroundColor = Color(0xFF121212)
 val textColor = Color(0xFFf8f8f8)
+val bottoSheetBackgroundColor = Color(0xFF262626)

@@ -1,4 +1,4 @@
-package io.dhruv1019.mangashelfnew
+package io.dhruv1019.mangashelfnew.modal
 
 import android.os.Parcelable
 import androidx.room.Entity
@@ -16,5 +16,6 @@ data class Manga(
     val title: String,
     val publishedChapterDate: Long,
     val category: String,
-    val isFavourite: Boolean = false
+    val isFavourite: Boolean = false,
+    val lastVisited: Long?  = null
 ): Parcelable

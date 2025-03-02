@@ -1,7 +1,8 @@
-package io.dhruv1019.mangashelfnew
+package io.dhruv1019.mangashelfnew.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import io.dhruv1019.mangashelfnew.modal.Manga
 
 @Database(
     entities = [Manga::class],

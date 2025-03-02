@@ -1,5 +1,6 @@
-package io.dhruv1019.mangashelfnew
+package io.dhruv1019.mangashelfnew.data.remote
 
+import io.dhruv1019.mangashelfnew.modal.Manga
 import retrofit2.Response
 import retrofit2.http.GET
 

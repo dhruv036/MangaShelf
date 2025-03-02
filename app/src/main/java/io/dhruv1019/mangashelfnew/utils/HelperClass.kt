@@ -1,4 +1,4 @@
-package io.dhruv1019.mangashelfnew
+package io.dhruv1019.mangashelfnew.utils
 
 data class Result<out T>(val status: Status, val data: T?, val message: String?) {
 

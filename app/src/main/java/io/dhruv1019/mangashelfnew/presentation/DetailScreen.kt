@@ -1,25 +1,21 @@
 package io.dhruv1019.mangashelfnew.presentation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,7 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -49,11 +44,11 @@ import coil.request.CachePolicy
 import coil.request.ErrorResult
 import coil.request.ImageRequest
 import coil.request.SuccessResult
-import io.dhruv1019.mangashelfnew.Constants
-import io.dhruv1019.mangashelfnew.Manga
+import io.dhruv1019.mangashelfnew.utils.Constants
+import io.dhruv1019.mangashelfnew.utils.Constants.getFormattedDate
+import io.dhruv1019.mangashelfnew.utils.Constants.giveMonthAndYear
+import io.dhruv1019.mangashelfnew.modal.Manga
 import io.dhruv1019.mangashelfnew.R
-import io.dhruv1019.mangashelfnew.presentation.MangaEvent
-import io.dhruv1019.mangashelfnew.presentation.giveMonthAndYear
 import io.dhruv1019.mangashelfnew.ui.theme.backgroundColor
 import io.dhruv1019.mangashelfnew.ui.theme.textColor
 import kotlinx.coroutines.Dispatchers
@@ -71,10 +66,17 @@ fun DetailScreen(
             manga = manga,
             modifier = Modifier.padding(top = padding.calculateTopPadding()),
             onBack = onBack,
-            onFavouriteClick = {
-                onMangaEvent(MangaEvent.Favourite(mangaId = manga.id, isFavourite = it))
+            onMangaEvent = {
+                onMangaEvent(it)
             }
         )
+    }
+    BackHandler {
+        onBack()
+        onMangaEvent(MangaEvent.Visited(
+            mangaId = manga.id,
+            timestamp = System.currentTimeMillis()
+        ))
     }
 }
 
@@ -84,9 +86,9 @@ fun DetailScreen(
 fun MangaItem2(
     manga: Manga,
     onBack: () -> Unit = {},
-    onFavouriteClick: (state: Boolean) -> Unit = {},
-    modifier: Modifier = Modifier
-) {
+    modifier: Modifier = Modifier,
+    onMangaEvent: (MangaEvent) -> Unit = {},
+    ) {
     val context = LocalContext.current
 
     val listener = object : ImageRequest.Listener {
@@ -149,7 +151,7 @@ fun MangaItem2(
                     color = textColor,
                     lineHeight = TextUnit(24f, TextUnitType.Sp),
                     textAlign = TextAlign.Left,
-                    modifier = Modifier.padding(top = 16.dp)
+                    modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)
                 )
 
                 Text(
@@ -157,11 +159,11 @@ fun MangaItem2(
                     fontFamily = FontFamily(Font(R.font.montserrat)),
                     style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold),
                     color = textColor,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 8.dp)) {
+                    modifier = Modifier.padding(vertical = 8.dp)) {
                     Icon(
                         Icons.Rounded.Star,
                         tint = textColor,
@@ -175,8 +177,9 @@ fun MangaItem2(
                     )
                 }
                 Row(
-                    modifier = Modifier.fillMaxWidth()
-                        .padding(top = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
@@ -193,8 +196,18 @@ fun MangaItem2(
                         color = textColor
                     )
                 }
-
-
+                if (manga.lastVisited != null){
+                    Text(
+                        text = "Last Visited: ".plus(getFormattedDate(manga.lastVisited)),
+                        fontFamily = FontFamily(Font(R.font.montserrat)),
+                        style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium),
+                        color = Color.LightGray,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp)
+                    )
+                }
             }
         }
         Row(
@@ -203,6 +216,10 @@ fun MangaItem2(
         ) {
             IconButton(onClick = {
                 onBack()
+                onMangaEvent(MangaEvent.Visited(
+                    mangaId = manga.id,
+                    timestamp = System.currentTimeMillis()
+                ))
             }) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBack,
@@ -215,7 +232,7 @@ fun MangaItem2(
 
             IconButton(
                 onClick = {
-                    onFavouriteClick(!manga.isFavourite)
+                    onMangaEvent(MangaEvent.Favourite(mangaId = manga.id, isFavourite = !manga.isFavourite))
                 },
             ) {
                 Icon(
@@ -228,7 +245,6 @@ fun MangaItem2(
             }
         }
 
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -236,8 +252,8 @@ fun MangaItem2(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)),
-                        startY = 80f, // Center fade start
-                        endY = Float.POSITIVE_INFINITY // Bottom fade end
+                        startY = 80f,
+                        endY = Float.POSITIVE_INFINITY
                     )
                 )
         )

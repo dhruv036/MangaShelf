@@ -1,11 +1,10 @@
 package io.dhruv1019.mangashelfnew.data
 
 import androidx.lifecycle.LiveData
-import io.dhruv1019.mangashelfnew.ILocalDataSource
-import io.dhruv1019.mangashelfnew.IRemoteDataSource
-import io.dhruv1019.mangashelfnew.Manga
-import io.dhruv1019.mangashelfnew.Result
-import io.dhruv1019.mangashelfnew.resultLiveData
+import io.dhruv1019.mangashelfnew.data.local.ILocalDataSource
+import io.dhruv1019.mangashelfnew.data.remote.IRemoteDataSource
+import io.dhruv1019.mangashelfnew.modal.Manga
+import io.dhruv1019.mangashelfnew.utils.Result
 import javax.inject.Inject
 
 class MangaRepository @Inject constructor(
@@ -25,6 +24,11 @@ class MangaRepository @Inject constructor(
     suspend fun putMangaFavourite(mangaId : String, status : Boolean){
         localDataSource.putMangaFavourite(mangaId, status)
     }
+
+    suspend fun putMangaLastVisited(mangaId : String, timestamp : Long){
+        localDataSource.putMangaLastVisited(mangaId, timestamp)
+    }
+
 
 
 

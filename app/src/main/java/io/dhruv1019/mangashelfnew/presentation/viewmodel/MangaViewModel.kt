@@ -1,23 +1,23 @@
-package io.dhruv1019.mangashelfnew.presentation
+package io.dhruv1019.mangashelfnew.presentation.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.dhruv1019.mangashelfnew.Manga
-import io.dhruv1019.mangashelfnew.Result
+import io.dhruv1019.mangashelfnew.utils.Constants.getYearFromUnixTime
+import io.dhruv1019.mangashelfnew.modal.Manga
+import io.dhruv1019.mangashelfnew.utils.Result
+import io.dhruv1019.mangashelfnew.modal.SortBy
 import io.dhruv1019.mangashelfnew.data.MangaRepository
+import io.dhruv1019.mangashelfnew.presentation.MangaEvent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.ZoneId
-import javax.annotation.meta.When
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,7 +26,11 @@ class MangaViewModel @Inject constructor(val repository: MangaRepository) : View
     private val _yearIndexMap = MutableStateFlow(mutableMapOf<Int, Int>())
     val yearIndexMap: StateFlow<Map<Int, Int>> = _yearIndexMap
 
-    val mangaList: StateFlow<Result<List<Manga>>> = repository.mangaList
+    private val _sortBy = MutableStateFlow(SortBy.NONE)
+    val sortBy: StateFlow<SortBy> = _sortBy
+
+
+    val _mangaList: StateFlow<Result<List<Manga>>> = repository.mangaList
         .asFlow()
         .map { result ->
             when (result.status) {
@@ -54,6 +58,35 @@ class MangaViewModel @Inject constructor(val repository: MangaRepository) : View
         }
         .stateIn(viewModelScope, SharingStarted.Lazily, Result.loading())
 
+
+    val mangaList: StateFlow<Result<List<Manga>>> = _mangaList
+        .combine(_sortBy) { result, sortBy ->
+            result.data?.let { manga ->
+                val sortedManga = when (sortBy) {
+                    SortBy.SCORE_LOW_TO_HIGH -> {
+                        Log.d("Sorting", "Sorting by SCORE_LOW_TO_HIGH")
+                        manga.sortedBy { it.score.also { s -> Log.d("Sorting", "Score: $s") } }
+                    }
+                    SortBy.SCORE_HIGH_TO_LOW -> {
+                        Log.d("Sorting", "Sorting by SCORE_HIGH_TO_LOW")
+                        manga.sortedByDescending { it.score.also { s -> Log.d("Sorting", "Score: $s") } }
+                    }
+                    SortBy.POPULARITY_LOW_TO_HIGH -> {
+                        Log.d("Sorting", "Sorting by POPULARITY_LOW_TO_HIGH")
+                        manga.sortedBy { it.popularity.also { p -> Log.d("Sorting", "Popularity: $p") } }
+                    }
+                    SortBy.POPULARITY_HIGH_TO_LOW -> {
+                        Log.d("Sorting", "Sorting by POPULARITY_HIGH_TO_LOW")
+                        manga.sortedByDescending { it.popularity.also { p -> Log.d("Sorting", "Popularity: $p") } }
+                    }
+                    SortBy.NONE -> manga // Do nothing, keep original order
+                }
+                Result.success(sortedManga)
+            } ?: result
+        }
+        .stateIn(viewModelScope, SharingStarted.Lazily, Result.loading())
+
+
     val favouriteMangaList: StateFlow<List<Manga>> = repository.favMangaList
         .asFlow()
         .stateIn(viewModelScope, SharingStarted.Lazily, listOf<Manga>())
@@ -62,7 +95,7 @@ class MangaViewModel @Inject constructor(val repository: MangaRepository) : View
     val scrollMangaListToPosition: StateFlow<Int> = _scrollMangaListToPosition
 
 
-    val yearList: StateFlow<List<Int>> = mangaList
+    val yearList: StateFlow<List<Int>> = _mangaList
         .map { result ->
             result.data?.map { getYearFromUnixTime(it.publishedChapterDate) }
                 ?.distinct()
@@ -72,18 +105,25 @@ class MangaViewModel @Inject constructor(val repository: MangaRepository) : View
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun mangaEvent(mangaEvent : MangaEvent){
+
         when(mangaEvent) {
             is MangaEvent.Favourite -> {
                 viewModelScope.launch {
                     repository.putMangaFavourite(mangaEvent.mangaId,mangaEvent.isFavourite)
                 }
             }
+            is MangaEvent.Sort -> {
+                Log.e("TAG", "MangaEvent.Sort: ${mangaEvent.sortType}", )
+                _sortBy.value = mangaEvent.sortType
+            }
+
+            is MangaEvent.Visited -> {
+                viewModelScope.launch {
+                    repository.putMangaLastVisited(mangaEvent.mangaId,mangaEvent.timestamp)
+                }
+            }
         }
     }
 
-    private fun getYearFromUnixTime(unixTime: Long): Int {
-        return Instant.ofEpochMilli(unixTime.times(1000))  // Convert into milliseconds
-            .atZone(ZoneId.systemDefault())
-            .year
-    }
+
 }
