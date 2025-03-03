@@ -16,6 +16,6 @@ data class Manga(
     val title: String,
     val publishedChapterDate: Long,
     val category: String,
-    val isFavourite: Boolean = false,
+    var isFavourite: Boolean = false,
     val lastVisited: Long?  = null
 ): Parcelable

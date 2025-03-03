@@ -1,6 +1,9 @@
 package io.dhruv1019.mangashelfnew.presentation
 
 import android.util.Log
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,9 +19,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
@@ -38,6 +44,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -45,8 +52,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -62,18 +71,20 @@ import coil.request.CachePolicy
 import coil.request.ErrorResult
 import coil.request.ImageRequest
 import coil.request.SuccessResult
-import io.dhruv1019.mangashelfnew.utils.Constants
-import io.dhruv1019.mangashelfnew.utils.Constants.giveMonthAndYear
-import io.dhruv1019.mangashelfnew.modal.Manga
 import io.dhruv1019.mangashelfnew.R
 import io.dhruv1019.mangashelfnew.R.font.gang_of_three
-import io.dhruv1019.mangashelfnew.utils.Result
+import io.dhruv1019.mangashelfnew.modal.Manga
 import io.dhruv1019.mangashelfnew.modal.SortBy
 import io.dhruv1019.mangashelfnew.ui.theme.backgroundColor
 import io.dhruv1019.mangashelfnew.ui.theme.bottoSheetBackgroundColor
 import io.dhruv1019.mangashelfnew.ui.theme.textColor
+import io.dhruv1019.mangashelfnew.utils.Constants
+import io.dhruv1019.mangashelfnew.utils.Constants.giveMonthAndYear
+import io.dhruv1019.mangashelfnew.utils.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.math.abs
+
 
 @Composable
 fun HomeScreen(
@@ -81,7 +92,8 @@ fun HomeScreen(
     onMangaEvent: (MangaEvent) -> Unit = {},
     onNavigateToMangaDetail: (mangaID: String) -> Unit = {},
     yearList: State<Map<Int, Int>>,
-    sortType: State<SortBy>
+    sortType: State<SortBy>,
+    favmangaList: State<List<Manga>>
 ) {
 
     when (mangaList.value.status) {
@@ -95,7 +107,8 @@ fun HomeScreen(
                     },
                     onMangaEvent = onMangaEvent,
                     yearList = yearList.value,
-                    sortType = sortType.value
+                    sortType = sortType.value,
+                    favmangaList = favmangaList.value
                 )
             } else {
                 EmptyState()
@@ -113,7 +126,7 @@ fun HomeScreen(
 }
 
 //@Preview
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun MangaList(
     mangaList: List<Manga> = Constants.dummyMangaList,
@@ -121,19 +134,22 @@ fun MangaList(
     onMangaEvent: (MangaEvent) -> Unit = {},
     yearList: Map<Int, Int>,
     sortType: SortBy,
+    favmangaList: List<Manga>,
 ) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val curSelectedYear = rememberSaveable {
         mutableStateOf(yearList.keys.first())
     }
+    val pagerState =
+        rememberPagerState(initialPage = 0, initialPageOffsetFraction = 0f, pageCount = { 0 })
     val bottomSheetState = rememberModalBottomSheetState()
     val isBottomSheetOpened = rememberSaveable {
         mutableStateOf(false)
     }
 
     LaunchedEffect(key1 = curSelectedYear.value) {
-        Log.e("TAG", "MangaList: ${curSelectedYear.value}")
+//        Log.e("TAG", "MangaList: ${curSelectedYear.value}")
         yearList[curSelectedYear.value]?.let { listState.scrollToItem(it) }
     }
     LaunchedEffect(key1 = listState.firstVisibleItemIndex) {
@@ -152,9 +168,7 @@ fun MangaList(
 
     }
 
-    LaunchedEffect(key1 = Unit) {
-        Log.e("TAG", "MangaList: ${mangaList.size}")
-    }
+
     Scaffold(
         modifier = Modifier
     ) { padding ->
@@ -166,7 +180,7 @@ fun MangaList(
         ) {
 
             Text(
-                text = "Manga Shelf",
+                text = stringResource(R.string.manga_shelf),
                 fontFamily = FontFamily(Font(gang_of_three)),
                 fontSize = 30.sp,
                 color = textColor,
@@ -175,6 +189,29 @@ fun MangaList(
                     .fillMaxWidth()
                     .padding(top = 16.dp)
             )
+
+            if (favmangaList.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.favourite_manga),
+                    fontFamily = FontFamily(Font(gang_of_three)),
+                    fontSize = 24.sp,
+                    color = textColor,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight(600),
+                    modifier = Modifier
+                        .padding(16.dp)
+                )
+
+                LazyRow(horizontalArrangement = Arrangement.Center) {
+                    itemsIndexed(favmangaList) { index, manga ->
+                        val pageOffset = calculateOffsetForItem(index, listState)
+                        FavouriteMangaItem(manga = manga, pageOffset = pageOffset, navigateToDetail = {
+                            onClick(manga.id)
+                        })
+                    }
+                }
+            }
+
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -194,11 +231,11 @@ fun MangaList(
                         .padding(16.dp)
                 )
 
-                Row (verticalAlignment = Alignment.CenterVertically,
+                Row(verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.clickable {
                         isBottomSheetOpened.value = !isBottomSheetOpened.value
 
-                    }){
+                    }) {
                     Text(
                         text = sortType.sortname,
                         fontFamily = FontFamily(Font(R.font.montserrat)),
@@ -222,14 +259,14 @@ fun MangaList(
 
             }
 
-            if (sortType == SortBy.NONE){
+            if (sortType == SortBy.NONE) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                 ) {
                     Text(
-                        text = "Year",
+                        text = stringResource(R.string.year),
                         fontFamily = FontFamily(Font(R.font.montserrat)),
                         style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
                         color = textColor,
@@ -245,7 +282,6 @@ fun MangaList(
                         items(yearList.keys.toList(), key = { it }) {
                             TextButton(onClick = {
                                 yearList[it]?.let { index ->
-                                    Log.e("TAG", "selected year $it $index")
                                     coroutineScope.launch {
                                         coroutineScope.launch {
                                             listState.scrollToItem(index)
@@ -290,9 +326,10 @@ fun MangaList(
                         navigateToDetail = {
                             onClick(manga.id)
                         },
-                        onFavouriteClick = {
-                            onMangaEvent(MangaEvent.Favourite(manga.id, it))
-                        }
+                        onMangaEvent = {
+                            onMangaEvent(it)
+                        },
+                        isFavouriteMarked = favmangaList.contains(manga)
                     )
                 }
             }
@@ -330,7 +367,10 @@ fun MangaList(
                             Text(
                                 text = it.sortdsc,
                                 fontFamily = FontFamily(Font(R.font.montserrat)),
-                                style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                                style = TextStyle(
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                ),
                                 color = if (sortType == it) bottoSheetBackgroundColor else textColor,
                                 modifier = Modifier.padding(4.dp)
                             )
@@ -348,7 +388,8 @@ fun MangaList(
 fun MangaItem(
     manga: Manga,
     navigateToDetail: () -> Unit = {},
-    onFavouriteClick: (state: Boolean) -> Unit = {}
+    onMangaEvent: (MangaEvent) -> Unit = {},
+    isFavouriteMarked: Boolean
 ) {
     val context = LocalContext.current
 
@@ -421,11 +462,11 @@ fun MangaItem(
                     )
                     IconButton(
                         onClick = {
-                            onFavouriteClick(!manga.isFavourite)
+                            onMangaEvent(MangaEvent.Favourite(manga.id, !isFavouriteMarked))
                         },
                     ) {
                         Icon(
-                            imageVector = if (manga.isFavourite) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                            imageVector = if (isFavouriteMarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
                             contentDescription = "Bookmark Icon",
                             tint = textColor,
                             modifier = Modifier
@@ -473,8 +514,6 @@ fun MangaItem(
                         color = textColor
                     )
                 }
-
-
             }
         }
     }
@@ -509,5 +548,112 @@ fun LoadingState() {
         contentAlignment = Alignment.Center
     ) {
         Text(text = "LOADING ...")
+    }
+}
+
+@Composable
+fun calculateOffsetForItem(index: Int, listState: LazyListState): Float {
+    val layoutInfo = listState.layoutInfo
+    val visibleItems = layoutInfo.visibleItemsInfo
+
+    val itemInfo = visibleItems.find { it.index == index } ?: return 0f
+    val center = layoutInfo.viewportEndOffset / 2
+
+    val itemCenter = (itemInfo.offset + itemInfo.size / 2)
+    val distance = abs(itemCenter - center).toFloat()
+
+    return distance / center
+}
+
+
+@Composable
+fun FavouriteMangaItem(
+    manga: Manga,
+    pageOffset: Float,
+    navigateToDetail: () -> Unit = {},
+) {
+
+    val context = LocalContext.current
+
+    val listener = object : ImageRequest.Listener {
+        override fun onError(request: ImageRequest, result: ErrorResult) {
+            super.onError(request, result)
+        }
+
+        override fun onSuccess(request: ImageRequest, result: SuccessResult) {
+            super.onSuccess(request, result)
+        }
+    }
+    val scaleXBox = Constants.Utils.lerp(
+        start = 0.9f,
+        stop = 1f,
+        fraction = 1f - pageOffset.coerceIn(0f, 1f)
+    )
+    val scaleYBox = Constants.Utils.lerp(
+        start = 0.7f,
+        stop = 1f,
+        fraction = 1f - pageOffset.coerceIn(0f, 1f)
+    )
+    val rotateY = Constants.Utils.lerp(
+        start = 10f,
+        stop = 0f,
+        fraction = 1f - pageOffset.coerceIn(0f, 1f)
+    )
+    val boxAngle: Float by animateFloatAsState(
+        targetValue = rotateY,
+        animationSpec = tween(durationMillis = 600, easing = Constants.Utils.EaseOutQuart)
+    )
+    val boxScaleX: Float by animateFloatAsState(
+        targetValue = scaleXBox,
+
+        animationSpec = tween(durationMillis = 800, easing = Constants.Utils.EaseOutQuart)
+    )
+    val boxScaleY: Float by animateFloatAsState(
+        targetValue = scaleYBox,
+
+        animationSpec = tween(durationMillis = 800, easing = Constants.Utils.EaseOutQuart)
+    )
+    val imageRequest = ImageRequest.Builder(context)
+        .data(manga.image)
+        .listener(listener)
+        .dispatcher(Dispatchers.IO)
+        .memoryCacheKey(manga.image)
+        .diskCacheKey(manga.image)
+        .placeholder(R.drawable.ic_launcher_background)
+        .error(R.drawable.ic_launcher_foreground)
+        .fallback(R.drawable.ic_launcher_foreground)
+        .diskCachePolicy(CachePolicy.ENABLED)
+        .memoryCachePolicy(CachePolicy.ENABLED)
+        .build()
+
+    Box(modifier = Modifier
+        .fillMaxWidth()
+        .clickable {
+            navigateToDetail()
+        }) {
+        AsyncImage(
+            model = imageRequest,
+            contentDescription = null,
+            modifier = Modifier
+
+                .padding(horizontal = 32.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .height(160.dp)
+                .aspectRatio(3f / 4f)
+                .graphicsLayer {
+                    Constants.Utils
+                        .lerp(
+                            start = 0.90f,
+                            stop = 1f,
+                            fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                        )
+                        .also {
+                            scaleX = boxScaleX
+                            scaleY = boxScaleY
+                            rotationY = boxAngle
+                        }
+                },
+            contentScale = ContentScale.FillBounds
+        )
     }
 }

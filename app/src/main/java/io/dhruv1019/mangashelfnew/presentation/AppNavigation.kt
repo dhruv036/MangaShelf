@@ -21,6 +21,7 @@ fun AppNavigation(mangaViewModel: MangaViewModel) {
     val navController = rememberNavController()
     val activity = LocalContext.current
     val mangaList = mangaViewModel.mangaList.collectAsStateWithLifecycle(initialValue = Result.loading())
+    val favmangaList = mangaViewModel.favouriteMangaList.collectAsStateWithLifecycle(initialValue = mutableListOf())
     val yearList = mangaViewModel.yearIndexMap.collectAsStateWithLifecycle(initialValue = mutableMapOf())
     val sortType = mangaViewModel.sortBy.collectAsStateWithLifecycle(initialValue = SortBy.NONE)
 
@@ -36,7 +37,8 @@ fun AppNavigation(mangaViewModel: MangaViewModel) {
                     navController.navigate(route = Routes.DetailScreen.name.plus("/$mangaId"))
                 },
                 yearList = yearList,
-                sortType = sortType
+                sortType = sortType,
+                favmangaList = favmangaList
             )
         }
         composable(

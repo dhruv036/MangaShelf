@@ -29,6 +29,8 @@ class MangaRepository @Inject constructor(
         localDataSource.putMangaLastVisited(mangaId, timestamp)
     }
 
+    suspend fun isMangaFavorite(mangaId : String) :LiveData<Boolean> = localDataSource.isMangaFavorite(mangaId)
+
 
 
 

@@ -13,6 +13,7 @@ class LocalDataSource  @Inject constructor(localDatabase: LocalDatabase) : ILoca
     override fun getAllMangaList() = databaseDao.getAllMangaList()
 
     override fun getFavMangaList() = databaseDao.fetchAllFavouriteManga()
+    override fun isMangaFavorite(mangaId : String) =  databaseDao.isMangaFavorite(mangaId)
 
     override suspend fun putMangaFavourite(mangaId: String, status : Boolean) {
         databaseDao.putMangaToFavourite(mangaId, status)
@@ -30,6 +31,7 @@ interface ILocalDataSource {
     suspend fun addMangaList(mangaList: List<Manga>)
     fun getAllMangaList() : LiveData<List<Manga>>
     fun getFavMangaList() : LiveData<List<Manga>>
+    fun isMangaFavorite(mangaId : String) : LiveData<Boolean>
     suspend fun putMangaFavourite(mangaId : String, status : Boolean)
     suspend fun putMangaLastVisited(mangaId : String, LastVisited : Long)
 }

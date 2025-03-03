@@ -19,6 +19,9 @@ interface DatabaseDao {
     @Query("SELECT * FROM Manga WHERE isFavourite = 1")
     fun fetchAllFavouriteManga(): LiveData<List<Manga>>
 
+    @Query("SELECT EXISTS (SELECT 1 FROM Manga WHERE id = :mangaId AND isFavourite = 1)")
+    fun isMangaFavorite(mangaId : String): LiveData<Boolean>
+
     @Query("UPDATE Manga SET isFavourite = :status WHERE id = :mangaId")
     suspend fun putMangaToFavourite(mangaId : String, status : Boolean)
 

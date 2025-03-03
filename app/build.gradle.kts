@@ -117,6 +117,8 @@ dependencies {
 
     implementation("androidx.core:core-splashscreen:1.0.1")
 
+    // Pager
+    implementation( "com.google.accompanist:accompanist-pager:0.28.0")
 
 
 

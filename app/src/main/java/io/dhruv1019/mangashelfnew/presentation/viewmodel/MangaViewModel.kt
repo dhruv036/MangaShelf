@@ -45,7 +45,9 @@ class MangaViewModel @Inject constructor(val repository: MangaRepository) : View
                     _yearIndexMap.value = yearMap
 
                     Result.success(
-                        result.data?.sortedBy { getYearFromUnixTime(it.publishedChapterDate) } ?: emptyList()
+                        result.data
+                            ?.sortedBy { getYearFromUnixTime(it.publishedChapterDate) }
+                            ?: emptyList()
                     )
                 }
                 Result.Status.ERROR -> {
@@ -64,22 +66,18 @@ class MangaViewModel @Inject constructor(val repository: MangaRepository) : View
             result.data?.let { manga ->
                 val sortedManga = when (sortBy) {
                     SortBy.SCORE_LOW_TO_HIGH -> {
-                        Log.d("Sorting", "Sorting by SCORE_LOW_TO_HIGH")
-                        manga.sortedBy { it.score.also { s -> Log.d("Sorting", "Score: $s") } }
+                        manga.sortedBy { it.score }
                     }
                     SortBy.SCORE_HIGH_TO_LOW -> {
-                        Log.d("Sorting", "Sorting by SCORE_HIGH_TO_LOW")
-                        manga.sortedByDescending { it.score.also { s -> Log.d("Sorting", "Score: $s") } }
+                        manga.sortedByDescending { it.score }
                     }
                     SortBy.POPULARITY_LOW_TO_HIGH -> {
-                        Log.d("Sorting", "Sorting by POPULARITY_LOW_TO_HIGH")
-                        manga.sortedBy { it.popularity.also { p -> Log.d("Sorting", "Popularity: $p") } }
+                        manga.sortedBy { it.popularity }
                     }
                     SortBy.POPULARITY_HIGH_TO_LOW -> {
-                        Log.d("Sorting", "Sorting by POPULARITY_HIGH_TO_LOW")
-                        manga.sortedByDescending { it.popularity.also { p -> Log.d("Sorting", "Popularity: $p") } }
+                        manga.sortedByDescending { it.popularity}
                     }
-                    SortBy.NONE -> manga // Do nothing, keep original order
+                    SortBy.NONE -> manga
                 }
                 Result.success(sortedManga)
             } ?: result
