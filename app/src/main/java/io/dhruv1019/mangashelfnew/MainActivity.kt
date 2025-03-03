@@ -9,7 +9,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
 import io.dhruv1019.mangashelfnew.presentation.AppNavigation
 import io.dhruv1019.mangashelfnew.presentation.viewmodel.MangaViewModel
-import io.dhruv1019.mangashelfnew.ui.theme.MangashelfNewTheme
+import io.dhruv1019.mangashelfnew.ui.theme.MangashelfTheme
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MangashelfNewTheme {
+            MangashelfTheme {
                 AppNavigation(mangaViewModel = viewModel)
             }
         }

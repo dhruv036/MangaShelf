@@ -22,26 +22,12 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class NetworkModule {
+ class NetworkModule {
 
     @Singleton
     @Provides
     fun providesMovieApi(retrofit: Retrofit): ApiService {
         return retrofit.create(ApiService::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun providesLocalDatabase(@ApplicationContext context: Context): LocalDatabase {
-        return Room.databaseBuilder(context, LocalDatabase::class.java, "local_db")
-            .fallbackToDestructiveMigration()
-            .build()
-    }
-
-    @Provides
-    @Singleton
-    fun providesTaskDao(db: LocalDatabase): DatabaseDao {
-        return db.getDatabaseDao()
     }
 
     @Singleton
@@ -52,14 +38,5 @@ class NetworkModule {
             .addCallAdapterFactory(CoroutineCallAdapterFactory())
             .baseUrl(Constants.BASE_URL)
             .build()
-    }
-
-    @Provides
-    @Singleton
-    fun providesTaskRepository(
-        remoteDataSource: IRemoteDataSource,
-        localDataSource: ILocalDataSource
-    ): MangaRepository {
-        return MangaRepository(remoteDataSource,localDataSource)
     }
 }

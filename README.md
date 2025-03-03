@@ -13,6 +13,9 @@ MangaShelf is an Android app that helps users explore and track their favorite m
 - **Favorites**:
   - Mark/unmark manga as favorite.
   - Persist favorite status using Room Database.
+- **Last Visited**:
+  - Show last visited date.
+  - Persist date using Room Database.
 - **Offline Support**:
   - Fetch manga list from API (`https://jsonkeeper.com/b/KEJO`).
   - Cache data in Room DB; retrieve from DB if network request fails.
@@ -32,6 +35,7 @@ MangaShelf is an Android app that helps users explore and track their favorite m
 - **Room Database**: Local storage
 - **Retrofit & Gson**: API handling & JSON parsing
 - **Kotlin Coroutines & Flow**: Asynchronous operations
+- - **Hilt**: Dependency Injection
 
 ## Installation
 1. Clone the repository:
