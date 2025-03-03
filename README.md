@@ -41,3 +41,4 @@ MangaShelf is an Android app that helps users explore and track their favorite m
 1. Clone the repository:
    ```sh
    git clone https://github.com/dhruv036/MangaShelf/tree/master
+2. App Demo Video [here](https://drive.google.com/file/d/12ujeEqwC2ztEcdo1DHtdbavXe03ZxXwH/view?usp=sharing)
